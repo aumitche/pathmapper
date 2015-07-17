@@ -1,0 +1,399 @@
+#include "m1.h"
+#include "m2.h"
+#include "m3.h"
+#include "m4.h"
+
+#define TNAUGHT 1000000
+#define OPEN_SET 0
+#define CLOSED_SET 1
+#define PENDING_SET -1
+#define NO_EDGE -1
+#define NO_TIME 0
+#define TURN_OFFSET 0.25
+
+using namespace std;
+
+
+struct intersectPath {
+    unsigned int intersectionID;
+    unsigned int reaching_segment;
+    unsigned int prevIntersectionID;
+    double timeToNode;
+    int setAffinity;
+
+    intersectPath(unsigned intersect, unsigned seg, unsigned prev, double travel, int affinity) {
+        intersectionID = intersect;
+        reaching_segment = seg;
+        prevIntersectionID = prev;
+        timeToNode = travel;
+        setAffinity = affinity;
+    }
+
+    intersectPath() {
+        intersectionID = -1;
+        reaching_segment = -1;
+        prevIntersectionID = -1;
+        timeToNode = 1000000;
+        setAffinity = 0;
+    }
+
+};
+
+struct queueIntersect {
+    unsigned int intersectID;
+    double travelTime;
+
+    queueIntersect(unsigned id, double time) {
+        intersectID = id;
+        travelTime = time;
+    }
+
+    queueIntersect() {
+        intersectID = -1;
+        travelTime = 1000000;
+    }
+
+    const bool operator>(const queueIntersect & rhs) const {
+        return (travelTime > rhs.travelTime);
+    }
+
+    const bool operator<(const queueIntersect & rhs) const {
+        //cout << "Operator < (less than): " << endl;
+        return (travelTime < rhs.travelTime);
+    }
+
+    const bool operator==(const queueIntersect & rhs) const {
+        return (intersectID == rhs.intersectID);
+    }
+
+};
+
+vector<unsigned> traveling_salesman(vector<unsigned> intersections_to_traverse, vector<unsigned> depot_locations)
+{
+
+    //cout << "Enter " << endl;
+	double shortestDistance;
+	vector<unsigned> path, totalPath;
+	unsigned int next, trueFlag;
+
+	unsigned int sizeI = intersections_to_traverse.size();
+	unsigned int sizeD = depot_locations.size();
+
+	vector<bool> visited(sizeI, false);
+
+		if ((intersections_to_traverse.size() == 0) || (depot_locations.size() == 0)) { // check for nothing
+    		return totalPath;
+    	}
+
+        if(sizeD == 1 && sizeI == 1){
+            return (find_path_between_intersections(depot_locations[0], intersections_to_traverse[0]));
+        }
+        
+        if(sizeI == 1){
+            return (find_path_between_intersections(depot_locations[0], intersections_to_traverse[0]));
+        }
+        
+	// Find the geographically closest intersection to the first given depot
+	for (unsigned int i = 0; i < sizeI; i++){
+		if (i == 0){
+			shortestDistance = find_distance_between_two_points(getIntersectionPosition(intersections_to_traverse[i]), getIntersectionPosition(depot_locations[0]));
+			next = intersections_to_traverse[i];
+			trueFlag = i;
+		}
+
+		if (shortestDistance < find_distance_between_two_points(getIntersectionPosition(intersections_to_traverse[i]), getIntersectionPosition(depot_locations[0]))){
+			continue;
+		}
+
+		shortestDistance = find_distance_between_two_points(getIntersectionPosition(intersections_to_traverse[i]), getIntersectionPosition(depot_locations[0]));
+		next = intersections_to_traverse[i];
+		trueFlag = i;
+	}
+
+	// Have the path from the depot to the first intersection
+	path = find_path_between_intersections(depot_locations[0], next);
+        for(unsigned int l=0; l < path.size(); l++){
+            totalPath.push_back(path[l]);
+        }
+	//totalPath.insert(totalPath.end(), path.begin(), path.end());
+	visited[trueFlag] = true;
+        
+        unsigned int iterate = 1;
+	unsigned current = next;
+	bool done = false;
+
+	// Until we have visited every required node
+	while (!done){
+                shortestDistance = 10000000;
+		unsigned int count = 0;
+		
+		for (unsigned int i = 0; i < sizeI; i++){
+                        
+                    //cout << visited[1] << endl;
+			if (visited[i]){
+                                count++;
+				continue;
+			}
+
+			if (i == 0){
+				shortestDistance = find_distance_between_two_points(getIntersectionPosition(current), getIntersectionPosition(intersections_to_traverse[i]));
+				next = intersections_to_traverse[i];
+				trueFlag = i;
+			}
+
+			if (shortestDistance < find_distance_between_two_points(getIntersectionPosition(current), getIntersectionPosition(intersections_to_traverse[i]))){
+				continue;
+			}
+
+			shortestDistance = find_distance_between_two_points(getIntersectionPosition(current), getIntersectionPosition(intersections_to_traverse[i]));
+			next = intersections_to_traverse[i];
+			trueFlag = i;
+		}
+                
+                if (count == visited.size()){
+			done = true;
+		}
+
+                
+
+		// Mark the intersection we end up visiting
+		// Add the path required to the total path
+		// Set the current node to the next node
+		visited[trueFlag] = true;
+		path = find_path_between_intersections(current, next);
+                for(unsigned int l=0; l < path.size(); l++){
+                   totalPath.push_back(path[l]);
+                }
+		//totalPath.insert(totalPath.end(), path.begin(), path.end());
+		current = next;
+
+		// See if all intersection have been visited yet
+//		for (unsigned int j = 0; j < visited.size(); j++){
+//			if (visited[j]){
+//				count++;
+//			}
+//			break;
+//		}
+		
+		// If all visited we are done with intersections
+
+               // cout << current << " the ID we are about to visit" << endl;
+                //cout << iterate << " intersections have been visited" << endl;
+                iterate++;
+
+	}
+
+	for (unsigned int i = 0; i < sizeI; i++){
+		if (i == 0){
+			shortestDistance = find_distance_between_two_points(getIntersectionPosition(intersections_to_traverse[i]), getIntersectionPosition(depot_locations[0]));
+			next = intersections_to_traverse[i];
+			trueFlag = i;
+		}
+
+		if (shortestDistance < find_distance_between_two_points(getIntersectionPosition(intersections_to_traverse[i]), getIntersectionPosition(depot_locations[0]))){
+			continue;
+		}
+
+		shortestDistance = find_distance_between_two_points(getIntersectionPosition(intersections_to_traverse[i]), getIntersectionPosition(depot_locations[0]));
+		next = intersections_to_traverse[i];
+		trueFlag = i;
+	}
+	
+	path = find_path_between_intersections(current, depot_locations[0]);
+	totalPath.insert(totalPath.end(), path.begin(), path.end());
+
+        
+        //cout << "Exit " << endl;
+	return totalPath;
+
+}
+
+
+//vector<unsigned> travelling_salesman(vector<unsigned> intersections_to_traverse, vector<unsigned> depot_locations) {
+//	//In simulated annealing, we start with the list of destinations in random order.
+//	//Might as well just use the vector we're given
+//	int mutation; //This will be the index where the mutation (swapping two pairs) will begin.
+//	int previous = -1; //The last mutation index, to avoid swapping the same pair twice
+//
+//        cout << "Start Pre Compute" << endl;
+//        
+//        unsigned int sizeI = intersections_to_traverse.size();
+//        unsigned int sizeD = depot_locations.size();
+//        
+//        vector<unsigned> result;
+//        vector<bool> found(intersections_to_traverse.size(), false);
+//        
+//        unordered_map <unsigned, map<unsigned, intersectInfo>> preComputedDepoPaths, preComputedIntersectPaths;
+//	for (int N = 0; N < intersections_to_traverse.size() ; N++)
+//	{
+//            cout << "Intersection IDs" << intersections_to_traverse[N] << endl;
+//		vector<unsigned> intersectCopy(intersections_to_traverse);
+//		intersectCopy.erase(intersectCopy.begin() + N);
+//		map<unsigned, intersectInfo> pathI = find_path_to_mult_intersections(intersections_to_traverse[N], intersectCopy);
+//		preComputedIntersectPaths[intersections_to_traverse[N]] = pathI;
+//	}
+//	for (int M = 0; M < depot_locations.size(); M++)
+//	{
+//		map<unsigned, intersectInfo> pathD = find_path_to_mult_intersections(depot_locations[M], intersections_to_traverse);
+//		preComputedDepoPaths[depot_locations[M]] = pathD;
+//	}
+//        
+//        cout << "Done Pre Compute" << endl;
+//
+//        vector<unsigned> depot_to_start = preComputedDepoPaths[depot_locations[0]][intersections_to_traverse[0]].path;
+//        result.insert(result.end(), depot_to_start.begin(), depot_to_start.end());
+//        
+//        
+//        vector<unsigned> route;
+//        //route.push_back(intersections_to_traverse[0]);
+//        unsigned int current = intersections_to_traverse[0];
+//        found[0] = true;
+//        bool done = false;
+//        
+//       unsigned int next, set_to_true;
+//       double shortestTime;
+//        
+//        // While we haven't visited every intersection
+//        while (!done){
+//        
+//        unsigned int count = 0;
+//
+//        
+//        // Check all the paths and select the shortest one
+//        for(int i = 0; i < sizeI-1; i++){
+//            
+//            // If we've already been to an intersection then move to the next one
+//            if(found[i]){
+//                continue;
+//            }
+//            
+//            if(i == 0){
+//                shortestTime = preComputedIntersectPaths[current][intersections_to_traverse[i]].time;
+//                next = intersections_to_traverse[i];
+//                set_to_true = i;
+//            }
+//            
+//            if ( shortestTime < preComputedIntersectPaths[current][intersections_to_traverse[i]].time){
+//                continue;             
+//            }
+//       
+//            cout << "Time is: " << shortestTime << endl;
+//            shortestTime = preComputedIntersectPaths[current][intersections_to_traverse[i]].time;
+//            next = intersections_to_traverse[i];
+//            set_to_true = i;
+//        
+//        }
+//        
+//        found[set_to_true] = true;
+//        route = preComputedIntersectPaths[current][next].path;
+//        result.insert(result.end(), route.begin(), route.end());
+//        current = next;
+//        
+//        
+//        
+//        for(int j= 0;  j < sizeI-1 ; j++){
+//            
+//            if(found[j]){
+//                count++;
+//            } else {
+//                break;
+//            }  
+//        }
+//        
+//        if(count == sizeI){
+//            done = true;
+//        }
+//        
+//        }
+//       
+//       route = preComputedDepoPaths[sizeI-1][sizeD - 1].path;
+//       result.insert(result.end(), route.begin(), route.end());
+//       return route;
+//        
+//        
+//}
+
+
+//	vector<unsigned> itinerary = intersections_to_traverse; //This is the solution itnerary (begin with the starting vector).
+//	//As the algorithm progresses, the itinerary will improve.
+//
+//	double currE = energy(itinerary);
+//	double testE = energy(itinerary);
+//
+//	for (int k = 0; k < 100; k++) {
+//            cout << "Iteration: " << k << " ";
+//		double t = temperature(k);
+//		t *= TNAUGHT;
+//                cout << "Temperature: " << t << ", ";
+//
+//		vector<unsigned> neighbour = itinerary; //This is a candidtate neighbour, which is created with a small mutation applied to the itinerary (swap two pairs of intersections).
+//		for (int i = 0; i < 2; i++) {
+//			//Generate a random number between 0 and intersections_to_traverse.size() - 1
+//			srand(time(NULL)); //Initialise random seed.
+//			mutation = rand() % intersections_to_traverse.size();
+//
+//			//If we are in the second iteration and the new mutation index is the same one, do it again.
+//			while (mutation == previous) {
+//				srand(time(NULL));
+//				mutation = rand() % intersections_to_traverse.size();
+//			}
+//
+//			//Now we can guarantee that we have an unused random number.
+//			previous = mutation;
+//
+//                        cout << "Swap " << mutation << ", ";
+//			//Swap a pair of intersections
+//			unsigned int temp;
+//			temp = neighbour[mutation];
+//			neighbour[mutation] = neighbour[mutation + 1];
+//			neighbour[mutation + 1] = temp;
+//		}
+//
+//		testE = energy(neighbour);
+//		double p = probability(currE, testE, t); //This is the probability that the test state will be accepted as a "better" state.
+//
+//		//Generate a random number between 0 and 1. This will be compared with the probability for acceptance.
+//		srand(time(NULL));
+//		double accept = (double) (rand()/(RAND_MAX));
+//
+//		cout << "Probability: " << p << ", accept " << accept << endl;
+//		if (p > accept) {
+//			itinerary = neighbour; //If the probability exceeds the acceptance threshold, accept the neighbour state as a "better" state.
+//		}
+//	}
+//
+//
+//	return itinerary;
+//}
+//
+double temperature(int k) {
+	double temp = exp(-k/2.0)+1;
+	return temp;
+}
+
+double probability(double currE, double testE, double t) {
+	double prob;
+
+	if (testE < currE) {
+		prob = 1.0; //If the test state has a lower energy than the current one, definitely accept it.
+	} else { //Otherwise, we might still accept a worse state, and its probability is described by the following formula.
+		prob = exp(-(testE - currE) / t); //Source: Kirkpatrick et al., 1983
+		//leonidzhukov.net/hse/2013/stochmod/papers/KirkpatrickGelattVechhi83.pdf
+	}
+	return prob;
+}
+
+double energy(vector<unsigned> route) {
+	double time = 0.0; //The total time of the entire trip
+	vector<unsigned> leg; //The shortest path for the current leg
+
+	for (unsigned int i = 0; i < route.size(); i++) {
+		if (i != route.size() - 1) { //As long as we are not going from the last destination back to the origin
+			leg = find_path_between_intersections(route[i], route[i+1]);
+		} else {
+			leg = find_path_between_intersections(route[i], route[0]);
+		}
+		time += compute_path_travel_time(leg);
+	}
+	return time;
+}

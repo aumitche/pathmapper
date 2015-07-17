@@ -1,0 +1,15 @@
+Trying to change property 'svn:ignore' from 'build
+libstreetmap.a
+libstreetsdatabase.a
+mapper
+' to 'libstreetmap.a
+build
+libstreetsdatabase.a
+mapper
+',
+but property already exists with value 'build
+libstreetmap.a
+libstreetsdatabase.a
+mapper
+.nfs000000000061989a00000536
+'.

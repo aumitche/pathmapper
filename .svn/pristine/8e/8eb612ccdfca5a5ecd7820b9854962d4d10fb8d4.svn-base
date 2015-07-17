@@ -1,0 +1,54 @@
+#pragma once
+
+#include <iostream>
+#include <utility>
+#include <cstdlib>
+#include <vector>
+#include <string>
+#include <time.h>
+#include <cmath>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include <boost/unordered_map.hpp>
+
+#include <queue>
+#include <set>
+#include <algorithm>
+#include <functional>
+
+#include "easygl_constants.h"
+#include "graphics.h"
+#include "IntersectionGraph.h"
+#include "StreetsDatabaseAPI.h"
+#include "LatLon.h"
+#include "intersectInfo.h"
+
+#include "Feature.h"
+#include "Highway.h"
+#include "POI.h"
+#include "Street.h"
+
+#define TNAUGHT = 1234
+
+using namespace std;
+
+// This routine takes in a vector of N intersections that must be traversed in a path, and another vector of M intersections that
+// are legal start and end points for the path. The first vector gives the intersection ids of a set of locations at which
+// deliveries must be made. The second vector gives the intersection ids of courier company depots containing trucks; you start at any
+// one of these depots and end at any one of the depots. You can assume that N is always at least 1, and M is always at
+// least one (i.e. both input vectors are non-empty). You can also assume that no intersection is repeated in either list and that
+// no intersection is both a delivery location and a depot (i.e. no intersection will appear in both vectors).
+// This routine returns a vector of street segment ids that form a path, where the first street segment id is connected to a depot
+// intersection, and the last street segment id also connects to a depot intersection.  If no path connecting all the delivery locations
+// and a start and end depot exists, this routine should return an empty (size == 0) vector.
+
+vector<unsigned> traveling_salesman(vector<unsigned> intersections_to_traverse, vector<unsigned> depot_locations);
+
+//The cooling schedule for the Simulated Annealing algorithm.
+double temperature(int k);
+
+//The probability of accepting a certain mutation as better than the current itinerary, used in the Simulated Annealing algorithm.
+double probability(double currE, double prevE, double t);
+
+//Returns the "energy" of the route. This is the metric that will be used to compare two different routes.
+double energy(vector<unsigned> route);

@@ -1,0 +1,2 @@
+/homes/a/aumitche/mapper_repo/libstreetmap/src/m1.cpp=/homes/a/aumitche/mapper_repo#-MMD -MP -Wall -g -O0 -D_GLIBCXX_DEBUG -Ilibstreetmap/src -Ilibstreetsdatabase/src -Imain/src -I/usr/include/freetype2 -I/opt/X11/include --std=c++11 -c libstreetmap/src/m1.cpp -o build/debug/libstreetmap/src/m1.o
+/homes/a/aumitche/mapper_repo/main/src/main.cpp=/homes/a/aumitche/mapper_repo#-MMD -MP -Wall -g -O0 -D_GLIBCXX_DEBUG -Ilibstreetmap/src -Ilibstreetsdatabase/src -Imain/src -I/usr/include/freetype2 -I/opt/X11/include --std=c++11 -c main/src/main.cpp -o build/debug/main/src/main.o
